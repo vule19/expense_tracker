@@ -1,5 +1,7 @@
 # 💰 Smart Expense Tracker (AI-Powered)
 
+## Check it out here: https://expensetracker-gxscipjzr3jtbpsaucctnp.streamlit.app/
+
 A sleek, modern expense management application built with **Streamlit** and powered by **Google Gemini 2.0**. This app automatically predicts the category of your expenses based on your descriptions, saving you time on manual data entry.
 
 ## ✨ Features
