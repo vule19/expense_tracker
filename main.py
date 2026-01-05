@@ -7,7 +7,6 @@ import time
 import matplotlib.pyplot as plt
 import streamlit as st
 
-
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
@@ -54,7 +53,6 @@ def add_expense(date, category, note, amount, type):
     new_row_df = pd.DataFrame([new_expense])
     data = pd.concat([data, new_row_df], ignore_index=True)
 
-
 csv_file = "Expense_data_1.csv"
 if os.path.exists(csv_file):
     data = pd.read_csv(csv_file, converters={"Amount": parse_amount})
@@ -68,35 +66,45 @@ with st.form("expense_form"):
     description = st.text_input("Description/Note")
     amount = st.number_input("Amount", min_value=0.0, format="%.2f")
 
-    predicted_category = ""
+    category_suggestion = ""
     if description:
-        predicted_category = predict_category(description)
+        category_suggestion = predict_category(description)
 
-    category = st.text_input("Category (you can edit the predicted category)", value=predicted_category)
-    type = st.selectbox("Type", ["Expense", "Income"])
+    category = st.text_input("Category (you can edit the predicted category)", value=category_suggestion)
+    entry_type = st.selectbox("Type", ["Expense", "Income"])
     submitted = st.form_submit_button("Add Expense/Income")
 
     if submitted:
-        add_expense(date, category, description, amount, type)
+        add_expense(date, category, description, amount, entry_type)
         data.to_csv(csv_file, index=False)
         st.success("Expense/Income added successfully!")
+        st.rerun()
 
 st.subheader("All Expenses/Incomes")
 st.dataframe(data)
 
 if not data.empty:
-    st.subheader("Expense Summary by Category")
+    expense_only = data[data['Type'] == 'Expense']
     
-    expense_summary = data[data['Type'] != 'Income'].groupby("Category")["Amount"].sum()
-    
-    # Bar Chart
-    fig, ax = plt.subplots()
-    expense_summary.plot(kind="bar", ax=ax)
-    ax.set_ylabel("Amount")
-    st.pyplot(fig)
+    if not expense_only.empty:
+        expense_summary = expense_only.groupby("Category")["Amount"].sum()
+        
+        if expense_summary.sum() > 0:
+            st.subheader("Expense Summary by Category")
+            
+            # Bar Chart
+            fig, ax = plt.subplots()
+            expense_summary.plot(kind="bar", ax=ax)
+            ax.set_ylabel("Amount")
+            st.pyplot(fig)
 
-    # Pie Chart
-    st.subheader("Category Distribution")
-    fig2, ax2 = plt.subplots()
-    expense_summary.plot(kind="pie", autopct="%1.1f%%", ax=ax2)
-    st.pyplot(fig2)
+            # Pie Chart
+            st.subheader("Category Distribution")
+            fig2, ax2 = plt.subplots()
+            expense_summary.plot(kind="pie", autopct="%1.1f%%", ax=ax2)
+            ax2.set_ylabel("")
+            st.pyplot(fig2)
+        else:
+            st.info("Add an expense with an amount greater than 0 to see charts.")
+    else:
+        st.info("No expenses found yet. Summary charts will appear once you add an Expense.")
