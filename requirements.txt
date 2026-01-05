@@ -3,3 +3,4 @@ pandas
 python-dotenv
 matplotlib
 streamlit
+st-gsheets-connection
