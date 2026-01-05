@@ -1,0 +1,16 @@
+Date,Account,Category,Note,Amount,Type
+1/1/2026 0:00,Main Bank,Income / Salary,Monthly Paycheck,4500.0,Income
+1/1/2026 0:00,Credit Card,Personal / Haircut,Barber Shop,16.9,Expense
+1/1/2026 0:00,Cash,Health / Pharmacy,Painkillers,71.75,Expense
+1/2/2026 0:00,Main Bank,Housing / Rent,Monthly Rent Payment,1600.0,Expense
+1/2/2026 0:00,Cash,Entertainment / Cinema,Movie Tickets,7.76,Expense
+1/2/2026 0:00,Credit Card,Housing / Maintenance,Plumbing Repair,92.37,Expense
+1/3/2026 0:00,Main Bank,Utilities / Water,Quarterly Bill,100.18,Expense
+1/4/2026 0:00,Cash,Entertainment / Gaming,PSN Subscription,42.5,Expense
+1/4/2026 0:00,Main Bank,Utilities / Water,Quarterly Bill,47.89,Expense
+1/5/2026 0:00,Cash,Shopping / Clothing,New Shirt,25.99,Expense
+1/6/2026 0:00,Credit Card,Entertainment / Streaming,Netflix,38.13,Expense
+1/7/2026 0:00,Cash,Food / Groceries,Weekly Groceries,82.23,Expense
+1/8/2026 0:00,Cash,Shopping / Clothing,Jeans,31.43,Expense
+1/9/2026 0:00,Credit Card,Transport / Rideshare,Uber to Work,104.56,Expense
+2026-01-05,,Other,buy clothes,0.0,Expense
