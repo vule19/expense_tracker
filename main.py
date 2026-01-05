@@ -53,7 +53,7 @@ def add_expense(date, category, note, amount, type):
     new_row_df = pd.DataFrame([new_expense])
     data = pd.concat([data, new_row_df], ignore_index=True)
 
-csv_file = "Expense_data_1.csv"
+csv_file = "expense_data_1.csv"
 if os.path.exists(csv_file):
     data = pd.read_csv(csv_file, converters={"Amount": parse_amount})
 else:
