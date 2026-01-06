@@ -11,8 +11,7 @@ from google import genai
 load_dotenv()
 AIClient = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
-password = quote_plus(os.getenv("MONGODB_PASSWORD"))
-mongo_uri = f"mongodb+srv://anhvle1901_db_user:{password}@cluster0.ymjq4sv.mongodb.net/?authSource=admin"
+mongo_uri = os.getenv("MONGODB_URI")
 
 client = MongoClient(mongo_uri)
 db = client["expense_tracker"]
