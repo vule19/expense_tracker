@@ -1,97 +1,107 @@
+from urllib.parse import quote_plus
 import pandas as pd
-import re
-from google import genai
+import time
 import os
 from dotenv import load_dotenv
-import time
-import matplotlib.pyplot as plt
+from pymongo import MongoClient
 import streamlit as st
-from streamlit_gsheets import GSheetsConnection
+import matplotlib.pyplot as plt
+from google import genai
 
 load_dotenv()
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
+AIClient = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
-conn = st.connection("gsheets", type=GSheetsConnection)
+password = quote_plus(os.getenv("MONGODB_PASSWORD"))
+mongo_uri = f"mongodb+srv://anhvle1901_db_user:{password}@cluster0.ymjq4sv.mongodb.net/?authSource=admin"
 
-def predict_category(note):
+client = MongoClient(mongo_uri)
+db = client["expense_tracker"]
+collection = db["expense_tracker"]
+
+def predict_category(note: str) -> str:
     prompt = f"""
-    Categorize this expense note into one of these categories: 
+    Categorize this expense note into one of these categories:
     Food, Transportation, Entertainment, Other.
-    Return only the category name as a single word.
+    Return only the category name.
     Note: {note}
     """
     try:
         time.sleep(4)
-        response = client.models.generate_content(
-            model="gemini-2.0-flash", 
+        response = AIClient.models.generate_content(
+            model="gemini-2.0-flash",
             contents=prompt,
             config={"max_output_tokens": 10, "temperature": 0}
         )
-        category = response.text.strip()
-        if category in ["Food", "Transportation", "Entertainment", "Other"]:
-            return category
-        return "Other"
+        cat = response.text.strip()
+        return cat if cat in {"Food", "Transportation", "Entertainment", "Other"} else "Other"
     except Exception:
         return "Other"
 
-try:
-    data = conn.read(spreadsheet=st.secrets["gsheets_url"], ttl=0)
-except Exception:
-    data = pd.DataFrame(columns=["Date", "Category", "Note", "Amount", "Type"])
+def load_data():
+    try:
+        docs = list(collection.find({}, {"_id": 0}))
+        return pd.DataFrame(docs)
+    except Exception as e:
+        st.error(f"Failed to load data: {e}")
+        return pd.DataFrame()
+
+data = load_data()
 
 st.title("Smart Expense Tracker")
 
 with st.form("expense_form"):
     date = st.date_input("Date")
-    description = st.text_input("Description/Note")
+    description = st.text_input("Description / Note")
     amount = st.number_input("Amount", min_value=0.0, format="%.2f")
-    category_input = st.text_input("Category (leave blank for AI prediction)")
+    category_input = st.text_input("Category (leave blank for AI)")
     entry_type = st.selectbox("Type", ["Expense", "Income"])
     submitted = st.form_submit_button("Add Entry")
 
     if submitted:
         final_category = category_input.strip()
-        
+
         if not final_category and description:
             with st.spinner("AI is categorizing..."):
                 final_category = predict_category(description)
         elif not final_category:
             final_category = "Other"
 
-        new_row = pd.DataFrame([{
-            "Date": str(date),
+        new_doc = {
+            "Date": date.strftime("%m/%d/%Y"),
             "Category": final_category,
             "Note": description,
-            "Amount": amount,
+            "Amount": float(amount),
             "Type": entry_type
-        }])
+        }
 
-        updated_data = pd.concat([data, new_row], ignore_index=True)
-        conn.update(spreadsheet=st.secrets["gsheets_url"], data=updated_data)
-        
-        st.success(f"Saved to Google Sheets as '{final_category}'!")
-        st.rerun()
+        try:
+            collection.insert_one(new_doc)
+            st.success(f"Saved as '{final_category}'")
+            st.rerun()
+        except Exception as e:
+            st.error(f"MongoDB insert failed: {e}")
 
 st.subheader("Recent Entries")
-st.dataframe(data)
 
 if not data.empty:
-    data['Amount'] = pd.to_numeric(data['Amount'], errors='coerce').fillna(0)
-    expense_only = data[data['Type'] == 'Expense']
-    
-    if not expense_only.empty:
-        expense_summary = expense_only.groupby("Category")["Amount"].sum()
-        
-        if expense_summary.sum() > 0:
-            col1, col2 = st.columns(2)
-            with col1:
-                st.write("Expenses by Category")
-                fig, ax = plt.subplots()
-                expense_summary.plot(kind="bar", ax=ax)
-                st.pyplot(fig)
-            with col2:
-                st.write("Distribution")
-                fig2, ax2 = plt.subplots()
-                expense_summary.plot(kind="pie", autopct="%1.1f%%", ax=ax2)
-                ax2.set_ylabel("")
-                st.pyplot(fig2)
+    st.dataframe(data)
+
+    data["Amount"] = pd.to_numeric(data["Amount"], errors="coerce").fillna(0)
+    expenses = data[data["Type"] == "Expense"]
+
+    if not expenses.empty:
+        summary = expenses.groupby("Category")["Amount"].sum()
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.write("Expenses by Category")
+            fig, ax = plt.subplots()
+            summary.plot(kind="bar", ax=ax)
+            st.pyplot(fig)
+
+        with col2:
+            st.write("Distribution")
+            fig2, ax2 = plt.subplots()
+            summary.plot(kind="pie", autopct="%1.1f%%", ax=ax2)
+            ax2.set_ylabel("")
+            st.pyplot(fig2)
