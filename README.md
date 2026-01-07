@@ -7,7 +7,7 @@ A sleek, modern expense management application built with **Streamlit** and powe
 ## ✨ Features
 * **AI Auto-Categorization:** Uses Google Gemini to intelligently suggest categories (Food, Transportation, Entertainment, etc.) as you type.
 * **Interactive Visualizations:** View your spending habits through dynamic bar charts and pie charts.
-* **Persistent Storage:** Saves your data to a local CSV file for easy tracking.
+* **Persistent Storage:** MongoDB
 * **Smart Parsing:** Automatically handles currency symbols and formatting.
 
 ## 🚀 Getting Started
